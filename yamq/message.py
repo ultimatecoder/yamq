@@ -1,12 +1,16 @@
+from itertools import count
+
 from yamq import utils
 
 
-class Message(utils.AutoID):
-    """Don't forget to call obj.delete() to delete the object actually from the memory."""
+class Message():
+    """Don't forget to call obj.delete() to delete object from the memory!"""
 
     _messages = {}
+    _last_id = count()
 
     def __init__(self, message, content_type):
+        self._id = next(Message._last_id)
         Message._messages[self._id] = self
         self.message = message
         self.content_type = content_type
@@ -30,11 +34,7 @@ class Message(utils.AutoID):
         return obj
 
     def __del__(self):
-        # TODO: I am totally confused my object will be removed from memory or
-        # not. Because the __del__ will be only called when reference count of
-        # the object will reach to ZERO. This reference count will not reach to
-        # ZERO because the Message._messages dict will have reference of it.
         try:
-            del message._messages[self._id]
-        except keyerror:
+            del Message._messages[self._id]
+        except KeyError:
             pass

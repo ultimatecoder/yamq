@@ -32,15 +32,26 @@ class TestParse(TestCase):
             stomp.dumps("invalid")
 
     def test_loads_okay(self):
-        response = (
-            'SUBSCRIBE\r\n'
-            'ack:client\r\n'
-            'destination:/queue/foo\r\n'
-            '\r\n'
-            '\r\n'
-            '\x00'
-        )
-        self.assertIs(type(stomp.loads(response)), stomp.Frame)
+        responses = [
+            (
+                'SUBSCRIBE\r\n'
+                'ack:client\r\n'
+                'destination:/queue/foo\r\n'
+                '\r\n'
+                '\r\n'
+                '\x00'
+            ),
+            (
+                'SEND\n'
+                'content-length:11\n'
+                'destination:/queue/test\n'
+                '\n'
+                'hello world'
+                '\x00'
+            )
+        ]
+        for response in responses:
+            self.assertIs(type(stomp.loads(response)), stomp.Frame)
 
     def test_loads_error(self):
         response = (

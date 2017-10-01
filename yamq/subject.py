@@ -22,3 +22,31 @@ class Subject:
         """Follows PUSH stratergy."""
         for observer in self.observers:
             await observer.update(self.name, message)
+
+
+class SubjectSTOMP:
+
+    def __init__(self, name, loop):
+        self.observers = {}  # observer_object: ack_type
+        self.name = name
+        self.loop = loop
+
+    def __repr__(self):
+        return "<Subject object: %s>" % (self.name,)
+
+    def subscribe(self, observer, subscription_id, ack="auto"):
+        self.observers[observer] = ack
+
+    def unsubscribe(self, observer):
+        try:
+            del self.observers[observer]
+        except KeyError:
+            # TODO: I am not sure you should silently pass
+            pass
+
+    def notify(self, message):
+        """Follows PUSH stratergy."""
+        for observer, ack in self.observers:
+            await observer.update(
+                self.name, message.message, message._id, ack
+            )

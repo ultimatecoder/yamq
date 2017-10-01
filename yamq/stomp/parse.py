@@ -3,7 +3,8 @@ from .frame import Frame
 
 def loads(raw_frame):
     """Parses raw data into STOMP Frame."""
-    lines = raw_frame.splitlines()
+    null_octed = raw_frame.index("\x00")
+    lines = raw_frame[:null_octed].splitlines()
 
     if not lines:
         raise ValueError("Error: Empty frame")
@@ -18,17 +19,16 @@ def loads(raw_frame):
 
     # Parsing Body
     body_start = header_end + 1
-    body_end = lines.index("\x00")
     return Frame(
         command=lines[0],
         headers=headers,
-        body=lines[body_start:body_end]
+        body=lines[body_start:]
     )
 
 
 def dumps(frame):
     """Serialises standard STOMP response."""
-    if not type(frame) is Frame:
+    if not isinstance(frame, Frame):
         raise ValueError("Error: Expecting stomp.Frame object.")
     response = [frame.command]
 

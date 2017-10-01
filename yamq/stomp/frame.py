@@ -29,15 +29,15 @@ class ConnectedFrame(Frame):
 
 class MessageFrame(Frame):
 
-    def __init__(self, destination, message_id, subscription_id, body="",
-                 ack=None):
+    def __init__(self, message, destination, subscription_id, ack=None):
         command = "MESSAGE"
         headers = {
             'destination': destination,
-            'message-id': message_id,
+            'message-id': message._id,
+            'content-type': message.content_type,
             'subscription': subscription_id
         }
 
         if ack:
             headers['ack'] = ack
-        super().__init__(command, headers, body)
+        super().__init__(command, headers, message.message)

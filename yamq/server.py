@@ -7,24 +7,12 @@ import stomp
 import observer
 import message
 
-SUBJECTS = {}
-#MESSAGES = {}
-
-#MESSAGE_ID = -1
-
-
-#def create_message(message):
-#    MESSAGE_ID += 1
-#    MESSAGES[MESSAGE_ID] = message
-#    return MESSAGE_ID
-
 
 class STOMP_Server(asyncio.Protocol):
     """Minimum supported version 1.2"""
 
     def connection_made(self, transport):
         self.transport = transport
-        self.subscription = {}
         self.observer = observer.ObserverSTOMP(event_loop, self.transport)
 
     def data_received(self, data):
@@ -64,31 +52,18 @@ class STOMP_Server(asyncio.Protocol):
         pass
 
     def send(self, destination, raw_message, **headers):
-        user_subject = SUBJECTS.get(destination)
-        if not user_subject:
-            user_subject = subject.SubjectSTOMP(
-                name=destination, loop=event_loop
-            )
-            SUBJECTS[destination] = subject
+        import pdb; pdb.set_trace()  # XXX BREAKPOINT
+        user_subject = subject.SubjectSTOMP(name=destination, loop=event_loop)
         message_obj = message.Message(raw_message)
-        self.loop.call_soon(user_subject.notify(message_obj))
+        user_subject.notify(message_obj)
 
-    def subscribe(self, subject_id, destination, ack="auto", **headers):
-        user_subject = SUBJECTS.get(destination)
-        if not user_subject:
-            user_subject = subject.SubjectSTOMP(
-                name=destination, loop=event_loop
-            )
-            SUBJECTS[destination] = subject
-        self.subscription[subject_id] = subject
-        user_subject.subscribe(self.observer, subscrption_id, ack)
+    def subscribe(self, subscription_id, destination, ack="auto", **headers):
+        import pdb; pdb.set_trace()  # XXX BREAKPOINT
+        user_subject = subject.SubjectSTOMP(destination, loop=event_loop)
+        self.observer.subscribe(user_subject, ack, subscription_id)
 
-    def unsubscribe(self, subject_id, **headers):
-        user_subject = self.subscription.get(subject_id)
-        if not user_subject:
-            # TODO: Return Error frame here
-            pass
-        user_subject.unsubscribe(self.observer)
+    def unsubscribe(self, subscription_id, **headers):
+        self.objserver.unsubscribe(subscription_id)
 
     def ack(self, id, **headers):
         pass
@@ -97,8 +72,10 @@ class STOMP_Server(asyncio.Protocol):
         pass
 
     def disconnect(self, receipt, **headers):
-        for user_subject in self.subscription.values():
-            user_subject.unsubscribe(self.observer)
+        self.observer.delete()
+
+    def connection_lost(self, exc):
+        self.observer.delete()
 
 
 #class YampServer(asyncio.Protocol):

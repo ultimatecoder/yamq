@@ -1,7 +1,5 @@
 from itertools import count
 
-from yamq import utils
-
 
 class Message():
     """Don't forget to call obj.delete() to delete object from the memory!"""
@@ -9,7 +7,7 @@ class Message():
     _messages = {}
     _last_id = count()
 
-    def __init__(self, message, content_type):
+    def __init__(self, message, content_type='text/plain'):
         self._id = next(Message._last_id)
         Message._messages[self._id] = self
         self.message = message

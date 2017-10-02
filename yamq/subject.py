@@ -33,14 +33,11 @@ class SubjectSTOMP:
             obj = cls._objects[name]
         except KeyError as e:
             obj = super().__new__(cls)
+            obj.observers = {}
+            obj.name = name
+            obj.loop = loop
             cls._objects[name] = obj
         return obj
-
-    def __init__(self, name, loop):
-        print("Init called for : {}".format(name))
-        self.observers = {}  # observer_object: ack_type
-        self.name = name
-        self.loop = loop
 
     def __repr__(self):
         return "<Subject object: %s>" % (self.name,)
@@ -65,9 +62,9 @@ class SubjectSTOMP:
             # TODO: I am not sure you should silently pass
             pass
 
-        if not self.objservers:
+        if not self.observers:
             self.delete()
 
     def notify(self, message):
-        for observer, ack_type in self.observers:
-            observer.update(message, ack_type, subject=self)
+        for observer, ack_type in self.observers.items():
+            observer.update(self, message, ack_type)

@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from yamq import subject, observer
+from yamq import subject, observer, message
 
 
 class TestSubjectSTOMP(unittest.TestCase):
@@ -60,9 +60,73 @@ class TestSubjectSTOMP(unittest.TestCase):
 
         self.assertDictEqual(obj_2.observers, {observer_1: "auto"})
 
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
         obj_3 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
         self.assertDictEqual(obj_3.observers, {
             observer_1: "auto",
             observer_2: "auto"
         })
+
+        obj_1.delete()
+        obj_2.delete()
+        obj_3.delete()
+
+    def test_get(self):
+        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        returned_obj = subject.SubjectSTOMP.get(obj_1.name)
+        self.assertIs(obj_1, returned_obj)
+
+        returned_obj = subject.SubjectSTOMP.get("test_queue_2")
+        self.assertIsNone(returned_obj)
+
+        obj_1.delete()
+
+    def test_delete(self):
+        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        returned_obj = subject.SubjectSTOMP.get("test_queue_1")
+
+        self.assertIs(obj_1, returned_obj)
+
+        obj_1.delete()
+        returned_obj = subject.SubjectSTOMP.get("test_queue_1")
+
+        self.assertIsNone(returned_obj)
+
+    def test_unsubscribe(self):
+        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+
+        observer_1 = observer.ObserverSTOMP(self.loop, self.transport)
+        observer_2 = observer.ObserverSTOMP(self.loop, self.transport)
+
+        obj_1.subscribe(observer_1, "auto")
+        obj_1.subscribe(observer_2, "auto")
+
+        self.assertDictEqual(obj_1.observers, {
+            observer_1: "auto",
+            observer_2: "auto"
+        })
+
+        obj_1.unsubscribe(observer_1)
+
+        self.assertDictEqual(obj_1.observers, {observer_2: "auto"})
+
+        obj_1.unsubscribe(observer_2)
+        self.assertDictEqual(obj_1.observers, {})
+
+        # It must call the subject_obj.delete() if there are no observers.
+        self.assertIsNone(subject.SubjectSTOMP.get('test_queue_1'))
+        obj_1.delete()
+
+    def test_z_notify(self):
+        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+
+        observer_1 = observer.ObserverSTOMP(self.loop, self.transport)
+        observer_2 = observer.ObserverSTOMP(self.loop, self.transport)
+
+        message_obj = message.Message("Test Message")
+
+        observer_1.subscribe(obj_1, "auto", "1")
+        observer_2.subscribe(obj_1, "auto", "2")
+
+        obj_1.notify(message_obj)
+
+        obj_1.delete()

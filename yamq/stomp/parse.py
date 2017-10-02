@@ -22,7 +22,7 @@ def loads(raw_frame):
     return Frame(
         command=lines[0],
         headers=headers,
-        body=lines[body_start:]
+        body='\r\n'.join(lines[body_start:])
     )
 
 

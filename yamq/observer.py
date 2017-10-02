@@ -1,6 +1,6 @@
 from bidict import bidict
 
-from yamq import stomp
+import stomp
 
 
 class Observer:
@@ -21,7 +21,6 @@ class ObserverSTOMP:
         self.subscriptions = bidict()  # subscription_id: subject_obj
 
     def subscribe(self, subject, ack_type, subscription_id):
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
         subject.subscribe(self, ack_type)
         self.subscriptions[subscription_id] = subject
 
@@ -30,7 +29,6 @@ class ObserverSTOMP:
         subject.unsubscribe(self)
 
     def update_auto(self, message_frame):
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
         self.transport(stomp.dumps(message_frame))
 
     def update_client(self, message_frame):
@@ -44,8 +42,7 @@ class ObserverSTOMP:
             subject.unsubscribe(self)
 
     def update(self, subject, message, ack):
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
-        subscrption_id = self.subscriptions.inv[subject]
+        subscription_id = self.subscriptions.inv[subject]
         frame = stomp.MessageFrame(
             message=message,
             destination=subject.name,

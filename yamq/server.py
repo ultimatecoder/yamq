@@ -52,13 +52,11 @@ class STOMP_Server(asyncio.Protocol):
         pass
 
     def send(self, destination, raw_message, **headers):
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
         user_subject = subject.SubjectSTOMP(name=destination, loop=event_loop)
         message_obj = message.Message(raw_message)
         user_subject.notify(message_obj)
 
     def subscribe(self, subscription_id, destination, ack="auto", **headers):
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
         user_subject = subject.SubjectSTOMP(destination, loop=event_loop)
         self.observer.subscribe(user_subject, ack, subscription_id)
 

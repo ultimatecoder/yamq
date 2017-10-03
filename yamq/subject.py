@@ -33,7 +33,7 @@ class SubjectSTOMP:
             obj = cls._objects[name]
         except KeyError as e:
             obj = super().__new__(cls)
-            obj.observers = {}
+            obj.observers = {}  # observer_obj: ack_type
             obj.name = name
             obj.loop = loop
             cls._objects[name] = obj

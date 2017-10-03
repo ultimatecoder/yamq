@@ -41,3 +41,23 @@ class MessageFrame(Frame):
         if ack:
             headers['ack'] = ack
         super().__init__(command, headers, message.message)
+
+
+class ReceiptFrame(Frame):
+
+    def __init__(self, receipt_id):
+        command = "RECEIPT"
+        headers = {
+            "receipt-id": receipt_id
+        }
+        super().__init__(command, headers)
+
+
+class ErrorFrame(Frame):
+
+    def __init__(self, message, description=""):
+        command = "ERROR"
+        headers = {
+            'message': message
+        }
+        super().__init__(command, headers, description)

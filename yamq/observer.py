@@ -7,16 +7,6 @@ import stomp
 
 class Observer:
 
-    def __init__(self, callback, loop):
-        self.loop = loop
-        self.callback = callback
-
-    async def update(self, subject, message):
-        self.loop.call_soon(self.callback, subject, message)
-
-
-class ObserverSTOMP:
-
     def __init__(self, loop, transport):
         self.loop = loop
         self.transport = transport
@@ -103,19 +93,3 @@ class ObserverSTOMP:
         )
         message.delete()
         self.messages_buffer.put_nowait(frame)
-        #asyncio.ensure_future(self.messages_buffer.put(frame))
-
-    #def update(self, subject, message, ack):
-    #    subscription_id = self.subscriptions.inv[subject]
-    #    frame = stomp.MessageFrame(
-    #        message=message,
-    #        destination=subject.name,
-    #        subscription_id=subscription_id,
-    #        ack=ack
-    #    )
-    #    if ack == 'client-individual':
-    #        self.update_client_inidividual(frame)
-    #    elif ack == 'client':
-    #        self.update_client(frame)
-    #    else:
-    #        self.update_auto(frame)

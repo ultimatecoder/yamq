@@ -14,7 +14,7 @@ class STOMP_Server(asyncio.Protocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        self.observer = observer.ObserverSTOMP(event_loop, self.transport)
+        self.observer = observer.Observer(event_loop, self.transport)
         self.messages_buffer = asyncio.Queue()
         self.message_service_task = event_loop.create_task(
             self.message_processing_service()
@@ -66,8 +66,10 @@ class STOMP_Server(asyncio.Protocol):
                 elif frame.command == "DISCONNECT":
                     await self.disconnect(frame.headers['receipt'])
                 else:
-                    message = "Invalid command received or supported command"
-                    self._close_connection(frame.ErrorFrame(message))
+                    error_message = (
+                        "Invalid command received or supported command"
+                    )
+                    self._close_connection(frame.ErrorFrame(error_message))
 
             except KeyError as e:
                 self._close_connection(
@@ -82,13 +84,13 @@ class STOMP_Server(asyncio.Protocol):
         pass
 
     async def send(self, destination, raw_message, **headers):
-        user_subject = subject.SubjectSTOMP(name=destination, loop=event_loop)
+        user_subject = subject.Subject(name=destination, loop=event_loop)
         message_obj = message.Message(raw_message)
         notify_func = partial(user_subject.notify, message_obj)
         event_loop.call_soon(notify_func)
 
     async def subscribe(self, subscription_id, destination, ack="auto", **headers):
-        user_subject = subject.SubjectSTOMP(destination, loop=event_loop)
+        user_subject = subject.Subject(destination, loop=event_loop)
         subscriber_function = partial(
             self.observer.subscribe, user_subject, ack, subscription_id
         )

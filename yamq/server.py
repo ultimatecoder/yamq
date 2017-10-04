@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import os
 from functools import partial
@@ -120,14 +121,29 @@ class STOMP_Server(asyncio.Protocol):
 
 
 if __name__ == '__main__':
-    IP = os.getenv("YAMP_SERVER", "127.0.0.1")
-    PORT = os.getenv("YAMP_PORT", "8000")
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-d", "--host",
+        type=str,
+        nargs="?",
+        default="localhost",
+        help=("Host name on which the server will bind to.")
+    )
+    parser.add_argument(
+        "-p", "--port",
+        type=int,
+        nargs='?',
+        default=8000,
+        help=(
+            "Port number on which the server will listen for incoming requests."
+        )
+    )
+    args = parser.parse_args()
     event_loop = asyncio.get_event_loop()
-    coro = event_loop.create_server(STOMP_Server, IP, PORT)
+    coro = event_loop.create_server(STOMP_Server, args.host, args.port)
     server = event_loop.run_until_complete(coro)
 
-    print("Server started on {}:{}".format(IP, PORT))
+    print("Server started on {}:{}".format(args.host, args.port))
 
     try:
         event_loop.run_forever()

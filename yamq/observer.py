@@ -47,11 +47,11 @@ class ObserverSTOMP:
         pass
 
     def delete(self):
-        for _, subject in self.subscriptions:
+        for _, subject in self.subscriptions.items():
             subject.unsubscribe(self)
         self.loop.call_soon(self.message_sending_service.cancel)
 
-    def message_received(self, message_id):
+    async def message_received(self, message_id):
         if message_id == self.last_message.headers.get('message-id'):
             self.client_delivery_task.cancel()
 
@@ -101,7 +101,9 @@ class ObserverSTOMP:
             subscription_id=subscription_id,
             ack=ack
         )
-        asyncio.ensure_future(self.messages_buffer.put(frame))
+        message.delete()
+        self.messages_buffer.put_nowait(frame)
+        #asyncio.ensure_future(self.messages_buffer.put(frame))
 
     #def update(self, subject, message, ack):
     #    subscription_id = self.subscriptions.inv[subject]

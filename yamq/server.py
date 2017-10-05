@@ -151,10 +151,19 @@ if __name__ == '__main__':
     coro = event_loop.create_server(STOMP_Server, args.host, args.port)
     server = event_loop.run_until_complete(coro)
 
-    logger = logging.getLogger('yamq_server')
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s]: %(message)s")
+
+    streamHandler = logging.StreamHandler()
+    streamHandler.setLevel(args.log_level)
+    streamHandler.setFormatter(formatter)
+
+
+    logger = logging.getLogger(__name__)
     logger.setLevel(args.log_level)
-    logger.info("Server started on {}:{}".format(args.host, args.port))
-    logger.warning("test")
+
+    logger.addHandler(streamHandler)
+
+    logger.info("Started server at {}:{}".format(args.host, args.port))
 
     try:
         event_loop.run_forever()

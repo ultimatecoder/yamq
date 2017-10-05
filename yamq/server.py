@@ -139,7 +139,7 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
-        "-l", "--log",
+        "-l", "--log-level",
         type=str,
         nargs='?',
         default="DEBUG",
@@ -151,7 +151,10 @@ if __name__ == '__main__':
     coro = event_loop.create_server(STOMP_Server, args.host, args.port)
     server = event_loop.run_until_complete(coro)
 
-    logging.info("Server started on {}:{}".format(args.host, args.port))
+    logger = logging.getLogger('yamq_server')
+    logger.setLevel(args.log_level)
+    logger.info("Server started on {}:{}".format(args.host, args.port))
+    logger.warning("test")
 
     try:
         event_loop.run_forever()

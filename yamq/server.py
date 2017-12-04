@@ -1,8 +1,8 @@
 import argparse
 import asyncio
+import logging
 import os
 from functools import partial
-
 
 import subject
 import stomp
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         type=str,
         nargs="?",
         default="localhost",
-        help=("Host name on which the server will bind to.")
+        help="Host name on which the server will bind to."
     )
     parser.add_argument(
         "-p", "--port",
@@ -138,12 +138,32 @@ if __name__ == '__main__':
             "Port number on which the server will listen for incoming requests."
         )
     )
+    parser.add_argument(
+        "-l", "--log-level",
+        type=str,
+        nargs='?',
+        default="DEBUG",
+        choices= ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"],
+        help="Decide the level of log the application should throw."
+    )
     args = parser.parse_args()
     event_loop = asyncio.get_event_loop()
     coro = event_loop.create_server(STOMP_Server, args.host, args.port)
     server = event_loop.run_until_complete(coro)
 
-    print("Server started on {}:{}".format(args.host, args.port))
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s]: %(message)s")
+
+    streamHandler = logging.StreamHandler()
+    streamHandler.setLevel(args.log_level)
+    streamHandler.setFormatter(formatter)
+
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(args.log_level)
+
+    logger.addHandler(streamHandler)
+
+    logger.info("Started server at {}:{}".format(args.host, args.port))
 
     try:
         event_loop.run_forever()

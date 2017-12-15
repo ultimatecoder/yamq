@@ -4,36 +4,36 @@ from unittest import mock
 from yamq import subject, observer, message
 
 
-class TestSubjectSTOMP(unittest.TestCase):
+class TestSubject(unittest.TestCase):
 
     def setUp(self):
         self.loop = unittest.mock.Mock()
         self.transport = unittest.mock.Mock()
 
     def test_object_creation(self):
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
 
         self.assertDictEqual(obj_1.observers, {})
         obj_1.delete()
 
     def test_subjects_are_unique(self):
-        self.assertDictEqual(subject.SubjectSTOMP._objects, {})
+        self.assertDictEqual(subject.Subject._objects, {})
 
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
 
-        self.assertDictEqual(subject.SubjectSTOMP._objects, {obj_1.name: obj_1})
+        self.assertDictEqual(subject.Subject._objects, {obj_1.name: obj_1})
 
-        obj_2 = subject.SubjectSTOMP(name="test_queue_2", loop=self.loop)
+        obj_2 = subject.Subject(name="test_queue_2", loop=self.loop)
 
-        self.assertDictEqual(subject.SubjectSTOMP._objects, {
+        self.assertDictEqual(subject.Subject._objects, {
             obj_1.name: obj_1,
             obj_2.name: obj_2
         })
 
-        obj_3 = subject.SubjectSTOMP(name=obj_1.name, loop=self.loop)
+        obj_3 = subject.Subject(name=obj_1.name, loop=self.loop)
 
         self.assertIs(obj_3, obj_1)
-        self.assertDictEqual(subject.SubjectSTOMP._objects, {
+        self.assertDictEqual(subject.Subject._objects, {
             obj_1.name: obj_1,
             obj_2.name: obj_2
         })
@@ -43,10 +43,10 @@ class TestSubjectSTOMP(unittest.TestCase):
         obj_3.delete()
 
     def test_subscribers_are_preserved(self):
-        observer_1 = observer.ObserverSTOMP(self.loop, self.transport)
-        observer_2 = observer.ObserverSTOMP(self.loop, self.transport)
+        observer_1 = observer.Observer(self.loop, self.transport)
+        observer_2 = observer.Observer(self.loop, self.transport)
 
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
         obj_1.subscribe(observer_1)
         obj_1.subscribe(observer_2)
 
@@ -55,12 +55,12 @@ class TestSubjectSTOMP(unittest.TestCase):
             observer_2: "auto"
         })
 
-        obj_2 = subject.SubjectSTOMP(name="test_queue_2", loop=self.loop)
+        obj_2 = subject.Subject(name="test_queue_2", loop=self.loop)
         obj_2.subscribe(observer_1)
 
         self.assertDictEqual(obj_2.observers, {observer_1: "auto"})
 
-        obj_3 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        obj_3 = subject.Subject(name="test_queue_1", loop=self.loop)
         self.assertDictEqual(obj_3.observers, {
             observer_1: "auto",
             observer_2: "auto"
@@ -71,31 +71,31 @@ class TestSubjectSTOMP(unittest.TestCase):
         obj_3.delete()
 
     def test_get(self):
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
-        returned_obj = subject.SubjectSTOMP.get(obj_1.name)
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
+        returned_obj = subject.Subject.get(obj_1.name)
         self.assertIs(obj_1, returned_obj)
 
-        returned_obj = subject.SubjectSTOMP.get("test_queue_2")
+        returned_obj = subject.Subject.get("test_queue_2")
         self.assertIsNone(returned_obj)
 
         obj_1.delete()
 
     def test_delete(self):
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
-        returned_obj = subject.SubjectSTOMP.get("test_queue_1")
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
+        returned_obj = subject.Subject.get("test_queue_1")
 
         self.assertIs(obj_1, returned_obj)
 
         obj_1.delete()
-        returned_obj = subject.SubjectSTOMP.get("test_queue_1")
+        returned_obj = subject.Subject.get("test_queue_1")
 
         self.assertIsNone(returned_obj)
 
     def test_unsubscribe(self):
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
 
-        observer_1 = observer.ObserverSTOMP(self.loop, self.transport)
-        observer_2 = observer.ObserverSTOMP(self.loop, self.transport)
+        observer_1 = observer.Observer(self.loop, self.transport)
+        observer_2 = observer.Observer(self.loop, self.transport)
 
         obj_1.subscribe(observer_1, "auto")
         obj_1.subscribe(observer_2, "auto")
@@ -113,14 +113,14 @@ class TestSubjectSTOMP(unittest.TestCase):
         self.assertDictEqual(obj_1.observers, {})
 
         # It must call the subject_obj.delete() if there are no observers.
-        self.assertIsNone(subject.SubjectSTOMP.get('test_queue_1'))
+        self.assertIsNone(subject.Subject.get('test_queue_1'))
         obj_1.delete()
 
     def test_z_notify(self):
-        obj_1 = subject.SubjectSTOMP(name="test_queue_1", loop=self.loop)
+        obj_1 = subject.Subject(name="test_queue_1", loop=self.loop)
 
-        observer_1 = observer.ObserverSTOMP(self.loop, self.transport)
-        observer_2 = observer.ObserverSTOMP(self.loop, self.transport)
+        observer_1 = observer.Observer(self.loop, self.transport)
+        observer_2 = observer.Observer(self.loop, self.transport)
 
         message_obj = message.Message("Test Message")
 

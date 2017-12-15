@@ -2,7 +2,7 @@ import asyncio
 
 from bidict import bidict
 
-import stomp
+from yamq import stomp
 
 
 class Observer:

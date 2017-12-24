@@ -1,3 +1,8 @@
+# Copyright (C) 2017-2018 Jaysinh Shukla (jaysinhp@gmail.com)
+# Please find copy of license at "LICENSE"
+# at the root of the project.
+
+
 import argparse
 import asyncio
 import logging
@@ -121,7 +126,14 @@ class STOMP_Server(asyncio.Protocol):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    description = """
+    Yet Another Messaging Queue (YAMQ) is messaging broker.
+
+    Copyright (C) 2017-2018 Jaysinh Shukla (jaysinh@gmail.com)
+    Please find copy of license at "LICENSE" at the root of the project.
+    """
+
+    parser = argparse.ArgumentParser(description)
     parser.add_argument(
         "-d", "--host",
         type=str,

@@ -6,7 +6,6 @@
 import argparse
 import asyncio
 import logging
-import os
 from functools import partial
 
 from yamq import subject
@@ -18,11 +17,15 @@ from yamq import message
 class STOMP_Server(asyncio.Protocol):
     """Minimum supported version 1.2"""
 
+    def __init__(self, *args, **kwargs):
+        self.event_loop = asyncio.get_event_loop()
+        super().__init__(*args, **kwargs)
+
     def connection_made(self, transport):
         self.transport = transport
-        self.observer = observer.Observer(event_loop, self.transport)
+        self.observer = observer.Observer(self.event_loop, self.transport)
         self.messages_buffer = asyncio.Queue()
-        self.message_service_task = event_loop.create_task(
+        self.message_service_task = self.event_loop.create_task(
             self.message_processing_service()
         )
 
@@ -90,21 +93,21 @@ class STOMP_Server(asyncio.Protocol):
         pass
 
     async def send(self, destination, raw_message, **headers):
-        user_subject = subject.Subject(name=destination, loop=event_loop)
+        user_subject = subject.Subject(name=destination, loop=self.event_loop)
         message_obj = message.Message(raw_message)
         notify_func = partial(user_subject.notify, message_obj)
-        event_loop.call_soon(notify_func)
+        self.event_loop.call_soon(notify_func)
 
     async def subscribe(self, subscription_id, destination, ack="auto", **headers):
-        user_subject = subject.Subject(destination, loop=event_loop)
+        user_subject = subject.Subject(destination, loop=self.event_loop)
         subscriber_function = partial(
             self.observer.subscribe, user_subject, ack, subscription_id
         )
-        event_loop.call_soon(subscriber_function)
+        self.event_loop.call_soon(subscriber_function)
 
     async def unsubscribe(self, subscription_id, **headers):
         unsubscribe_func = partial(self.observer.unsubscribe, subscription_id)
-        event_loop.call_soon(unsubscribe_func)
+        self.event_loop.call_soon(unsubscribe_func)
 
     async def ack(self, message_id, subscription_id, **headers):
         await self.observer.message_received(message_id)
@@ -113,7 +116,7 @@ class STOMP_Server(asyncio.Protocol):
         pass
 
     async def disconnect(self, receipt_id, **headers):
-        event_loop.call_soon(self.observer.delete)
+        self.event_loop.call_soon(self.observer.delete)
         recept_frame = stomp.ReceiptFrame(receipt_id)
         reply = stomp.dumps(recept_frame)
         self.transport.write(reply.encode('utf-8'))
@@ -121,5 +124,5 @@ class STOMP_Server(asyncio.Protocol):
         self.transport.close()
 
     def connection_lost(self, exc):
-        event_loop.call_soon(self.observer.delete)
+        self.event_loop.call_soon(self.observer.delete)
         self.message_service_task.cancel()

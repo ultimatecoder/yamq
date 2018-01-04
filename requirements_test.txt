@@ -1,0 +1,3 @@
+-r requirements.txt
+
+stomp.py==4.1.19
